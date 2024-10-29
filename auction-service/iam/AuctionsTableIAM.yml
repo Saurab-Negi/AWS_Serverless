@@ -1,4 +1,4 @@
-AuctionsTableIAM:
+AuctionsTableIAM: 
   Effect: Allow
   Action:
     - dynamodb:PutItem
@@ -6,6 +6,10 @@ AuctionsTableIAM:
     - dynamodb:GetItem
     - dynamodb:UpdateItem
     - dynamodb:Query
+    - cognito-idp:AdminInitiateAuth
+    - cognito-idp:AdminCreateUser
+    - cognito-idp:AdminSetUserPassword
   Resource:
     - ${self:custom.AuctionsTable.arn}
     - !Join ['/', [ '${self:custom.AuctionsTable.arn}', 'index', 'statusAndEndDate' ]]
+    - !GetAtt UserPool.Arn
