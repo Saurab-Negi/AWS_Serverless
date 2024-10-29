@@ -4,7 +4,7 @@ import createError from 'http-errors';
 
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
-const register = async (event) => {
+const login = async (event) => {
     try {
         // Check if event.body is a string and parse it
         const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
@@ -16,40 +16,33 @@ const register = async (event) => {
         }
 
         const USER_POOL = process.env.USER_POOL;
+        const USER_CLIENT = process.env.USER_CLIENT;
 
-        // Create the user in Cognito
-        const result = await cognito.adminCreateUser({
+        // Authenticate the user in Cognito
+        const response = await cognito.adminInitiateAuth({
+            AuthFlow: "ADMIN_NO_SRP_AUTH",
             UserPoolId: USER_POOL,
-            Username: email,
-            UserAttributes: [
-                {
-                    Name: "email",
-                    Value: email,
-                },
-            ],
-            // MessageAction: "SUPPRESS",
+            ClientId: USER_CLIENT,
+            AuthParameters: {
+                USERNAME: email,
+                PASSWORD: password
+            },
         }).promise();
 
-        // Optionally, set the user's password
-        if (result.User) {
-            await cognito.adminSetUserPassword({
-                UserPoolId: USER_POOL,
-                Username: email,
-                Password: password,
-                Permanent: true,
-            }).promise();
-        }
-
+        // Successful login
         return {
-            statusCode: 201,
-            body: JSON.stringify({ message: "User registered successfully. A verification email has been sent." }),
+            statusCode: 200,
+            body: JSON.stringify({
+                message: "Login successful",
+                data: response.AuthenticationResult
+            }),
         };
     } catch (error) {
         console.error(error);
 
         // Prepare the error response
         const statusCode = error.statusCode || 500;
-        const message = error.message || 'An error occurred during registration';
+        const message = error.message || 'An error occurred during login';
 
         return {
             statusCode,
@@ -58,4 +51,4 @@ const register = async (event) => {
     }
 };
 
-export const handler = commonMiddleware(register);
+export const handler = commonMiddleware(login);

@@ -13,7 +13,7 @@ provider:
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
     USER_POOL: !Ref UserPool
-    USER_POOL_CLIENT: ${self:provider.stage}-user-pool-client
+    USER_CLIENT: !Ref UserClient
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
 
@@ -79,6 +79,12 @@ functions:
     events:
       - http:
           path: /register
+          method: post
+  login:
+    handler: src/handlers/login.handler
+    events:
+      - http:
+          path: /login
           method: post
 
 package:
